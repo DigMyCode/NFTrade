@@ -28,6 +28,7 @@ class App extends Component {
       window.alert('Non-Ethereum browser detected. You should consider trying MetaMask!')
     }
   }
+  images = []
 
 //   async loadBlockchainData() {
 //     const web3 = window.web3

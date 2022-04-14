@@ -3,7 +3,6 @@ pragma solidity ^0.5.0;
 import "./ERC721Full.sol";
 
 contract NFTrade is ERC721Full {
-
   constructor() ERC721Full("NFTrade Token", "NFTRADE") public {
   }
 
@@ -13,6 +12,11 @@ contract NFTrade is ERC721Full {
     _setTokenURI(_tokenId, _tokenURI);
     return true;
   }  
+
+  // Store Images
+  uint public imageCount = 0;
+  mapping(uint => Image) public images;
+
 
   struct Image {
     uint id;
@@ -38,26 +42,26 @@ contract NFTrade is ERC721Full {
     address payable author
   );
 
-  // // Create NFT image
-  // function uploadImage(string memory _imgHash, string memory _description) public {
-  //   // Make sure image hash exists
-  //   require(bytes(_imgHash).length > 0);
+  // Create NFT image
+  function uploadImage(string memory _imgHash, string memory _description) public {
+    // Make sure image hash exists
+    require(bytes(_imgHash).length > 0);
 
-  //   // Make sure image description exists
-  //   require(bytes(_description).length > 0);
+    // Make sure image description exists
+    require(bytes(_description).length > 0);
     
-  //   // Make sure upploader address exists
-  //   require(msg.sender != address(0x0));
+    // Make sure upploader address exists
+    require(msg.sender != address(0x0));
     
-//     // Increment image id
-//     imageCount ++;
+    // Increment image id
+    imageCount ++;
 
-//     // Add Image to contract
-//     images[imageCount] = Image(imageCount, _imgHash, _description, 0, msg.sender);
+    // Add Image to contract
+    images[imageCount] = Image(imageCount, _imgHash, _description, 1, msg.sender);
     
-//     // Trigger an event
-//     emit ImageCreated(imageCount, _imgHash, _description, 0, msg.sender);
-//   }
+    // Trigger an event
+    emit ImageCreated(imageCount, _imgHash, _description, 1, msg.sender);
+  }
 
 //   // Buy Images
 //   function buyImage(uint _id) public payable {
