@@ -1,14 +1,14 @@
 import React, { Component } from 'react';
 import Identicon from 'identicon.js';
-import photo from '../photo.png'
+import logo from '../logo.png'
 
 class Navbar extends Component {
 
   render() {
     return (
       <nav className="navbar navbar-dark fixed-top bg-dark flex-md-nowrap p-0 shadow">
-          <img src={photo} width="30" height="30" className="d-inline-block align-top" alt="" />
-          Decentragram
+          <img src={logo} width="30" height="30" className="d-inline-block align-top" alt="" />
+          NFTrade
         <ul className="navbar-nav px-3">
           <li className="nav-item text-nowrap d-none d-sm-none d-sm-block">
             <small className="text-secondary">
