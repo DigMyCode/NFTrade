@@ -104,4 +104,21 @@ contract('NFTrade', ([deployer, buyer, author]) => {
       assert.equal(image.author, author, 'author is correct')      
     })
   })
+
+  describe('market', async () => {
+    
+    before(async () => {
+      buyImage = await token.buyImage(imageCount, buyer)
+    })
+
+    it('able to buy item', async () => {
+      assert.equal(imageCount, 1)
+      const event = result.logs[0].args
+      assert.equal(event.id.toNumber(), imageCount.toNumber(), 'id is correct')
+      assert.equal(event.hash, hash, 'Hash is correct')
+      assert.equal(event.imgPrice, '1', 'price is correct')
+      assert.equal(event.author, author, 'author is correct')   
+      assert.equal(event.owner, buyer, 'owner is correct')
+    })
+  })
 })
