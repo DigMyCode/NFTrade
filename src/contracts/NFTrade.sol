@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.2;
 
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
@@ -21,6 +21,7 @@ contract NFTrade is ReentrancyGuard {
     uint itemId;
     string hash;
     IERC721 nft;
+    uint tokenId;
     string description;
     uint price;
     address payable seller;
@@ -32,6 +33,7 @@ contract NFTrade is ReentrancyGuard {
     string hash,
     address indexed nft,
     uint tokenId,
+    string description,
     uint price,
     address indexed seller
   );
@@ -47,7 +49,7 @@ contract NFTrade is ReentrancyGuard {
   );
 
   // Create NFT item
-  function listItem(IERC721 _nft, string memory _hash, string memory _description) public {
+  function listItem(IERC721 _nft, string memory _hash, string memory _description, uint _tokenId, uint _price) external nonReentrant {
     require(_price > 0, "Price must be greater than 0");
 
     // Make sure item hash exists
@@ -71,13 +73,14 @@ contract NFTrade is ReentrancyGuard {
         _hash,
         _nft,
         _tokenId,
+        _description,
         _price,
         payable(msg.sender),
         false
     );
 
     // Trigger an event
-    emit Offered(itemCount, _hash, _nft, _description, 1, msg.sender);
+    emit Offered(itemCount, _hash, address(this), _tokenId, _description, 1, msg.sender);
   }
 
   function purchaseItem(uint _itemId) external payable nonReentrant {
@@ -98,7 +101,7 @@ contract NFTrade is ReentrancyGuard {
     item.nft.transferFrom(address(this), msg.sender, item.tokenId);
   }
 
-  function getTotalPrice(uint _itemId) view public returns(uint) {
-    return(items[_itemId].price=(100 + feePercent)/100);
+  function getTotalPrice(uint _itemId) public returns(uint) {
+    return(items[_itemId].price = (100 + feePercent)/100);
   }
 }
