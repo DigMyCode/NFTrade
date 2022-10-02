@@ -1,89 +1,107 @@
-pragma solidity ^0.5.0;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.2;
 
-import "./ERC721Full.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-contract NFTrade is ERC721Full {
-  constructor() ERC721Full("NFTrade Token", "NFTRADE") public {
+contract NFTrade is ReentrancyGuard {
+  address payable public immutable feeAccount; // The account that recieves fees   
+  uint public immutable feePercent; // The fee percentage on sales
+  uint public itemCount;
+
+  constructor(uint _feePercent) {
+    feeAccount = payable(msg.sender);
+    feePercent = _feePercent;
   }
 
-  function mint(address _to, string memory _tokenURI) public returns(bool) {
-    uint _tokenId = totalSupply().add(1);
-    _mint(_to, _tokenId);
-    _setTokenURI(_tokenId, _tokenURI);
-    return true;
-  }  
+  // List items
+  mapping(uint => Item) public items;
 
-  // Store Images
-  uint public imageCount = 0;
-  mapping(uint => Image) public images;
-
-
-  struct Image {
-    uint id;
+  struct Item {
+    uint itemId;
     string hash;
+    IERC721 nft;
+    uint tokenId;
     string description;
-    uint imgPrice;
-    address payable author;
+    uint price;
+    address payable seller;
+    bool sold;
   }
 
-  event ImageCreated(
-    uint id,
+  event Offered(
+    uint itemId,
     string hash,
+    address indexed nft,
+    uint tokenId,
     string description,
-    uint imgPrice,
-    address payable author
+    uint price,
+    address indexed seller
   );
 
-  event ImageBought(
-    uint id,
+  event Bought(
+    uint itemId,
     string hash,
-    string description,
-    uint imgPrice,
-    address payable author
+    address indexed nft,
+    uint tokenId,
+    uint price,
+    address indexed seller,
+    address indexed buyer
   );
 
-  // Create NFT image
-  function uploadImage(string memory _imgHash, string memory _description) public {
-    // Make sure image hash exists
-    require(bytes(_imgHash).length > 0);
+  // Create NFT item
+  function listItem(IERC721 _nft, string memory _hash, string memory _description, uint _tokenId, uint _price) external nonReentrant {
+    require(_price > 0, "Price must be greater than 0");
 
-    // Make sure image description exists
+    // Make sure item hash exists
+    require(bytes(_hash).length > 0);
+
+    // Make sure item description exists
     require(bytes(_description).length > 0);
-    
+
     // Make sure upploader address exists
     require(msg.sender != address(0x0));
     
-    // Increment image id
-    imageCount ++;
+    // Increment item id
+    itemCount ++;
 
-    // Add Image to contract
-    images[imageCount] = Image(imageCount, _imgHash, _description, 1, msg.sender);
-    
+    // Transfer nft 
+    _nft.transferFrom(msg.sender, address(this), _tokenId);
+
+    // Add new item to items mapping
+    items[itemCount] = Item(
+        itemCount,
+        _hash,
+        _nft,
+        _tokenId,
+        _description,
+        _price,
+        payable(msg.sender),
+        false
+    );
+
     // Trigger an event
-    emit ImageCreated(imageCount, _imgHash, _description, 1, msg.sender);
+    emit Offered(itemCount, _hash, address(this), _tokenId, _description, 1, msg.sender);
   }
 
-//   // Buy Images
-//   function buyImage(uint _id) public payable {
-//     // Make sure the id is valid
-//     require(_id > 0 && _id <= imageCount);
-    
-//     // Fetch the image
-//     Image memory _image = images[_id];
-    
-//     // Fetch the author
-//     address payable _author = _image.author;
-    
-//     // Pay the author by sending them Ether
-//     address(_author).transfer(msg.value);
-    
-//     // Increment the tip amount - no needed, md
-//     _image.tipAmount = _image.tipAmount + msg.value;
-    
-//     // Update the image
-//     images[_id] = _image;
-    
-//     // Trigger an event
-//     emit ImageBought(_id, _image.hash, _image.description, _image.imgPrice, _author);
-//   }
+  function purchaseItem(uint _itemId) external payable nonReentrant {
+    uint _totalPrice = getTotalPrice(_itemId);
+    Item storage item = items[_itemId];
+    require(_itemId > 0 && _itemId <= itemCount, "Item doesn't exist");
+    require(msg.value >= _totalPrice, "not enough ether to cover item price with fee");
+    require(!item.sold, "item already sold");
+
+    // Pay seller and feeAccount
+    item.seller.transfer(item.price);
+    feeAccount.transfer(_totalPrice - item.price);
+
+    // Update item to sold
+    item.sold = true;
+
+    // Transfer nft to buyer
+    item.nft.transferFrom(address(this), msg.sender, item.tokenId);
+  }
+
+  function getTotalPrice(uint _itemId) public returns(uint) {
+    return(items[_itemId].price = (100 + feePercent)/100);
+  }
 }

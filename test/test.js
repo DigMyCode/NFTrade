@@ -103,38 +103,22 @@ contract('NFTrade', ([deployer, buyer, author]) => {
       assert.equal(image.imgPrice, '1', 'price is correct')
       assert.equal(image.author, author, 'author is correct')      
     })
+  })
 
-    // it('allows users to tip images', async () => {
-    //   // Track the author balance before purchase
-    //   let oldAuthorBalance
-    //   oldAuthorBalance = await web3.eth.getBalance(author)
-    //   oldAuthorBalance = new web3.utils.BN(oldAuthorBalance)
+  describe('market', async () => {
+    
+    before(async () => {
+      buyImage = await token.buyImage(imageCount, buyer)
+    })
 
-    //   result = await decentragram.tipImageOwner(imageCount, { from: tipper, value: web3.utils.toWei('1', 'Ether') })
-      
-    //   //SUCCESS
-    //   const event = result.logs[0].args
-    //   assert.equal(event.id.toNumber(), imageCount.toNumber(), 'id is correct')
-    //   assert.equal(event.hash, hash, 'Hash is correct')
-    //   assert.equal(event.description, 'Image description', 'description is correct')
-    //   assert.equal(event.tipAmount, '1000000000000000000', 'tip amount is correct')
-    //   assert.equal(event.author, author, 'author is correct')
-
-    //   // Check that author received funds
-    //   let newAuthorBalance
-    //   newAuthorBalance = await web3.eth.getBalance(author)
-    //   newAuthorBalance = new web3.utils.BN(newAuthorBalance)
-      
-    //   let tipImageOwner
-    //   tipImageOwner = web3.utils.toWei('1', 'Ether')
-    //   tipImageOwner = new web3.utils.BN(tipImageOwner)
-
-    //   const expectedBalance = oldAuthorBalance.add(tipImageOwner)
-
-    //   assert.equal(newAuthorBalance.toString(), expectedBalance.toString())
-
-    //   // FAILURE: Tries to tip an image that does not exist
-    //   await decentragram.tipImageOwner(99, { from: tipper, value: web3.utils.toWei('1', 'Ether') }).should.be.rejected;
-    // })
+    it('able to buy item', async () => {
+      assert.equal(imageCount, 1)
+      const event = result.logs[0].args
+      assert.equal(event.id.toNumber(), imageCount.toNumber(), 'id is correct')
+      assert.equal(event.hash, hash, 'Hash is correct')
+      assert.equal(event.imgPrice, '1', 'price is correct')
+      assert.equal(event.author, author, 'author is correct')   
+      assert.equal(event.owner, buyer, 'owner is correct')
+    })
   })
 })
