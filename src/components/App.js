@@ -40,7 +40,7 @@ class App extends Component {
     if(networkData) {
       const nftrade = web3.eth.Contract(NFTrade.abi, networkData.address)
       this.setState({ nftrade })
-      const imagesCount = await nftrade.methods.imageCount().call()
+      const imagesCount = await nftrade.methods.itemCount().call()
       this.setState({ imagesCount })
 
       // Load images
