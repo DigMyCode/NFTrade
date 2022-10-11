@@ -6,22 +6,23 @@ require('chai')
   .use(require('chai-as-promised'))
   .should()
 
-contract('NFTrade', ([deployer, buyer, author]) => {
+
+contract('NFT', () => {
   let token
 
   before(async () => {
-    token = await NFTrade.deployed()
+    token = await NFT.deployed()
   })
 
-  describe('deployment', async () => {
-    it('deploys successfully', async () => {
+  describe('NFT deployment', async () => {
+    it('NFT deploys successfully', async () => {
       const address = token.address
       assert.notEqual(address, 0x0)
       assert.notEqual(address, '')
       assert.notEqual(address, null)
       assert.notEqual(address, undefined)
     })
-
+    
     it('has a name', async () => {
       const name = await token.name()
       assert.equal(name, 'NFTrade Token')
@@ -31,6 +32,26 @@ contract('NFTrade', ([deployer, buyer, author]) => {
       const symbol = await token.symbol()
       assert.equal(symbol, 'NFTRADE')
     })
+  })
+
+})
+
+contract('NFTrade', ([deployer, buyer, author]) => {
+  let token
+
+  before(async () => {
+    token = await NFTrade.deployed()
+  })
+
+  describe('NFTrade deployment', async () => {
+    it('NFTrade deploys successfully', async () => {
+      const address = token.address
+      assert.notEqual(address, 0x0)
+      assert.notEqual(address, '')
+      assert.notEqual(address, null)
+      assert.notEqual(address, undefined)
+    })
+
   })
 
   describe('token distribution', async () => {

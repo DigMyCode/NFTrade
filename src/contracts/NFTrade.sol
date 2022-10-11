@@ -83,6 +83,10 @@ contract NFTrade is ReentrancyGuard {
     emit Offered(itemCount, _hash, address(this), _tokenId, _description, 1, msg.sender);
   }
 
+  function getFeePercent() public view returns(uint) {
+    return(feePercent);
+  }
+  
   function purchaseItem(uint _itemId) external payable nonReentrant {
     uint _totalPrice = getTotalPrice(_itemId);
     Item storage item = items[_itemId];
