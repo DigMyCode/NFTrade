@@ -1,5 +1,6 @@
 const { assert } = require('chai')
 
+const NFT = artifacts.require('./NFT.sol')
 const NFTrade = artifacts.require('./NFTrade.sol')
 
 require('chai')
@@ -7,16 +8,16 @@ require('chai')
   .should()
 
 
-contract('NFT', () => {
-  let token
+contract('NFT', (deployer) => {
+  let nft
 
   before(async () => {
-    token = await NFT.deployed()
+    nft = await NFT.deployed()
   })
 
   describe('NFT deployment', async () => {
     it('NFT deploys successfully', async () => {
-      const address = token.address
+      const address = nft.address
       assert.notEqual(address, 0x0)
       assert.notEqual(address, '')
       assert.notEqual(address, null)
@@ -24,13 +25,47 @@ contract('NFT', () => {
     })
     
     it('has a name', async () => {
-      const name = await token.name()
-      assert.equal(name, 'NFTrade Token')
+      const name = await nft.name()
+      assert.equal(name, 'NFTrade NFT')
     })
 
     it('has a symbol', async () => {
-      const symbol = await token.symbol()
+      const symbol = await nft.symbol()
       assert.equal(symbol, 'NFTRADE')
+    })
+  })
+
+  describe('token distribution', async () => {
+    let result
+
+    it('mints tokens', async () => {
+      await nft.mint(deployer, 'https://www.token-uri.com/nft')
+      // It should increase the total supply
+      result = await nft.totalSupply()
+      assert.equal(result.toString(), '1', 'total supply is correct')
+
+      // It increments owner balance
+      result = await nft.balanceOf(deployer)
+      assert.equal(result.toString(), '1', 'balanceOf is correct')
+
+      // Token should belong to owner
+      result = await nft.ownerOf('1')
+      assert.equal(result.toString(), deployer.toString(), 'ownerOf is correct')
+      result = await nft.tokenOfOwnerByIndex(deployer, 0)
+
+      // Owner can see all tokens
+      let balanceOf = await nft.balanceOf(deployer)
+      let tokenIds = []
+      for (let i = 0; i < balanceOf; i++) {
+        let id = await nft.tokenOfOwnerByIndex(deployer, i)
+        tokenIds.push(id.toString())
+      }
+      let expected = ['1']
+      assert.equal(tokenIds.toString(), expected.toString(), 'tokenIds is correct')
+
+      // Token URI is correct
+      let tokenURI = await nft.tokenURI('1')
+      assert.equal(tokenURI, 'https://www.token-uri.com/nft')
     })
   })
 
@@ -52,40 +87,6 @@ contract('NFTrade', ([deployer, buyer, author]) => {
       assert.notEqual(address, undefined)
     })
 
-  })
-
-  describe('token distribution', async () => {
-    let result
-
-    it('mints tokens', async () => {
-      await token.mint(deployer, 'https://www.token-uri.com/nft')
-      // It should increase the total supply
-      result = await token.totalSupply()
-      assert.equal(result.toString(), '1', 'total supply is correct')
-
-      // It increments owner balance
-      result = await token.balanceOf(deployer)
-      assert.equal(result.toString(), '1', 'balanceOf is correct')
-
-      // Token should belong to owner
-      result = await token.ownerOf('1')
-      assert.equal(result.toString(), deployer.toString(), 'ownerOf is correct')
-      result = await token.tokenOfOwnerByIndex(deployer, 0)
-
-      // Owner can see all tokens
-      let balanceOf = await token.balanceOf(deployer)
-      let tokenIds = []
-      for (let i = 0; i < balanceOf; i++) {
-        let id = await token.tokenOfOwnerByIndex(deployer, i)
-        tokenIds.push(id.toString())
-      }
-      let expected = ['1']
-      assert.equal(tokenIds.toString(), expected.toString(), 'tokenIds is correct')
-
-      // Token URI is correct
-      let tokenURI = await token.tokenURI('1')
-      assert.equal(tokenURI, 'https://www.token-uri.com/nft')
-    })
   })
 
   describe('images', async () => {
