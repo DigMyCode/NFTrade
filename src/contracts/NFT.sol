@@ -11,15 +11,29 @@ import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 
-contract NFT is ERC721URIStorage {
-    uint public tokenCount;
+contract NFT is ERC721URIStorage, ERC721Enumerable {
 
     constructor() ERC721("NFTrade NFT", "NFTRADE") {}
 
-    function mint(string memory _tokenURI) external returns(uint) {
-        tokenCount ++;
-        _safeMint(msg.sender, tokenCount);
-        _setTokenURI(tokenCount, _tokenURI);
-        return(tokenCount);
+    using SafeMath for uint256; 
+
+    function _burn(uint256 tokenId) internal override(ERC721, ERC721URIStorage) {
+        super._burn(tokenId);
+    }
+    function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal override(ERC721, ERC721Enumerable) {
+        super._beforeTokenTransfer(from, to, tokenId);
+    }
+    function tokenURI(uint256 tokenId) public view override(ERC721, ERC721URIStorage) returns (string memory) {
+        return super.tokenURI(tokenId);
+    }
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721, ERC721Enumerable) returns (bool) {
+        return super.supportsInterface(interfaceId);
+    }
+
+    function mint(address _to, string memory _tokenURI) external returns(uint) {
+        uint256 _tokenId = totalSupply().add(1);
+        _safeMint(_to, _tokenId);
+        _setTokenURI(_tokenId, _tokenURI);
+        return(_tokenId);
     }
 }
