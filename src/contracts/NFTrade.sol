@@ -3,11 +3,12 @@ pragma solidity ^0.8.2;
 
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "./NFT.sol";
 
-contract NFTrade is ReentrancyGuard {
+contract NFTrade is NFT, ReentrancyGuard {
   address payable public immutable feeAccount; // The account that recieves fees   
   uint public immutable feePercent; // The fee percentage on sales
-  uint public itemCount;
+  uint public itemCount = 0;
 
   constructor(uint _feePercent) {
     feeAccount = payable(msg.sender);
@@ -53,13 +54,13 @@ contract NFTrade is ReentrancyGuard {
     require(_price > 0, "Price must be greater than 0");
 
     // Make sure item hash exists
-    require(bytes(_hash).length > 0);
+    require(bytes(_hash).length > 0, "Item must have hash");
 
     // Make sure item description exists
-    require(bytes(_description).length > 0);
+    require(bytes(_description).length > 0, "Item must have description");
 
     // Make sure upploader address exists
-    require(msg.sender != address(0x0));
+    require(msg.sender != address(0x0), "Initiator'a address can not be 0x0");
     
     // Increment item id
     itemCount ++;
@@ -80,7 +81,7 @@ contract NFTrade is ReentrancyGuard {
     );
 
     // Trigger an event
-    emit Offered(itemCount, _hash, address(this), _tokenId, _description, 1, msg.sender);
+    emit Offered(itemCount, _hash, address(this), _tokenId, _description, _price, msg.sender);
   }
 
   function getFeePercent() public view returns(uint) {
