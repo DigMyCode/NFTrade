@@ -111,7 +111,7 @@ require('chai')
         // SUCCESS
         assert.equal(itemCount, 1)
         // Fetching the listItem() output arguments
-        const event = result.logs[2].args
+        const event = result.logs[1].args
         assert.equal(event.itemId.toNumber(), itemCount, 'Item id is correct')
         assert.equal(event.hash, hash, 'Hash is correct')
         assert.equal(event.description, 'Item description', 'Item description is correct')
