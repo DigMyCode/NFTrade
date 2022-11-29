@@ -84,12 +84,12 @@ require('chai')
     describe('NFTrade deployment', async () => {
       it('NFTrade deploys successfully', async () => {
         const address = marketplace.address
+        const feePercent = await marketplace.getFeePercent()
         assert.notEqual(address, 0x0)
         assert.notEqual(address, '')
         assert.notEqual(address, null)
         assert.notEqual(address, undefined)
-        // assert.equal(marketplace.options.feePercent, 1, 'Fee percent is correct')
-        // console.log(marketplace.options.feePercent)
+        assert.equal(feePercent, 1, 'Fee percent is correct')
       })
   
     })
