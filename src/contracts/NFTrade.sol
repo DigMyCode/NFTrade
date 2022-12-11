@@ -8,7 +8,7 @@ import "./NFT.sol";
 contract NFTrade is NFT, ReentrancyGuard {
   address payable public immutable feeAccount; // The account that recieves fees   
   uint public immutable feePercent; // The fee percentage on sales
-  uint public itemCount = 0;
+  uint public itemCount;
 
   constructor(uint _feePercent) {
     feeAccount = payable(msg.sender);
@@ -36,7 +36,8 @@ contract NFTrade is NFT, ReentrancyGuard {
     uint tokenId,
     string description,
     uint price,
-    address indexed seller
+    address indexed seller,
+    bool sold
   );
 
   event Bought(
@@ -46,7 +47,8 @@ contract NFTrade is NFT, ReentrancyGuard {
     uint tokenId,
     uint price,
     address indexed seller,
-    address indexed buyer
+    address indexed buyer,
+    bool sold
   );
 
   // Create NFT item
@@ -81,7 +83,7 @@ contract NFTrade is NFT, ReentrancyGuard {
     );
 
     // Trigger an event
-    emit Offered(itemCount, _hash, address(this), _tokenId, _description, _price, msg.sender);
+    emit Offered(itemCount, _hash, address(this), _tokenId, _description, _price, msg.sender, false);
   }
 
   function getFeePercent() public view returns(uint) {
@@ -104,9 +106,11 @@ contract NFTrade is NFT, ReentrancyGuard {
 
     // Transfer nft to buyer
     item.nft.transferFrom(address(this), msg.sender, item.tokenId);
+
+    emit Bought(_itemId, item.hash, address(this), item.tokenId, _totalPrice, item.seller, msg.sender, true);
   }
 
   function getTotalPrice(uint _itemId) public returns(uint) {
-    return(items[_itemId].price = (100 + feePercent)/100);
+    return(items[_itemId].price = items[_itemId].price * (100 + feePercent)/100);
   }
 }

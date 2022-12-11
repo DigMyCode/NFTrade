@@ -73,11 +73,9 @@ require('chai')
   })
 
   contract('NFTrade', ([author, buyer]) => {
-    let nft, marketplace
     const hash = 'abc123'
 
     before(async () => {
-      nft = await NFT.deployed()
       marketplace = await NFTrade.deployed()
     })
   
@@ -102,7 +100,7 @@ require('chai')
         await marketplace.mint(author, 'https://www.token-uri.com/nft', { from: author } )
         // Author approves marketplace to spend nft
         await marketplace.setApprovalForAll(marketplace.address, true)
-        result = await marketplace.listItem(marketplace.address, hash, 'Item description', 1, toWei('1'), { from: author })
+        result = await marketplace.listItem(marketplace.address, hash, 'Item description', 1, toWei('0.1'), { from: author })
         itemCount = await marketplace.itemCount()
       })
   
@@ -115,10 +113,10 @@ require('chai')
         assert.equal(event.itemId.toNumber(), itemCount, 'Item id is correct')
         assert.equal(event.hash, hash, 'Hash is correct')
         assert.equal(event.description, 'Item description', 'Item description is correct')
-        assert.equal(event.tokenId.toNumber(), 1, 'Token id is correct')
-        assert.equal(event.price, toWei('1'), 'Price is correct')
+        assert.equal(event.tokenId.toNumber(), itemCount, 'Token id is correct')
+        assert.equal(event.price, toWei('0.1'), 'Price is correct')
         assert.equal(event.seller, author, 'Owner is correct')
-      
+
         // FAILURE: Image must have hash
         await marketplace.listItem('', 'Image description', { from: author }).should.be.rejected;
       
@@ -132,8 +130,8 @@ require('chai')
         assert.equal(item.itemId.toNumber(), itemCount.toNumber(), 'id is correct')
         assert.equal(item.hash, hash, 'Hash is correct')
         assert.equal(item.tokenId.toNumber(), itemCount.toNumber(), 'id is correct')
-        assert.equal(item.price, toWei('1'), 'price is correct')
-        assert.equal(item.seller, author, 'author is correct')      
+        assert.equal(item.price, toWei('0.1'), 'price is correct')
+        assert.equal(item.seller, author, 'author is correct')
       })
     })
   
@@ -141,19 +139,34 @@ require('chai')
       let result, itemCount
 
       before(async () => {
-        result = await marketplace.purchaseItem(itemCount, { from: buyer })
-        itemCount = await marketplace.itemCount()
+        // Author mints nft
+        await marketplace.mint(author, 'https://www.token-uri.com/nft', { from: author } )
+        // Author approves marketplace to spend nft
+        await marketplace.setApprovalForAll(marketplace.address, true)
+        // Author litst nft
+        await marketplace.listItem(marketplace.address, hash, 'Item description', 2, toWei('0.1'), { from: author })
+        itemCount = await marketplace.itemCount() 
+        // Buyer tries to buy nft
+        result = await marketplace.purchaseItem(itemCount, { from: buyer, value: toWei('0.101') })
       })
-  
+      
       it('able to buy item', async () => {
-        assert.equal(itemCount, 1)
-        const event = result.logs[0].args
-        assert.equal(event.itemId.toNumber(), itemCount.toNumber(), 'item id is correct')
-        assert.equal(event.tokenId.toNumber(), tokenId.toNumber(), 'token id is correct')
+        // Check from event Bought
+        assert.equal(itemCount, 2)
+        const event = result.logs[1].args
+        console.log(event)
+        // Check whether the itemId, hash and tokenId are correct
+        assert.equal(event.itemId.toNumber(), itemCount.toNumber(), 'Item id is correct')
         assert.equal(event.hash, hash, 'Hash is correct')
-        assert.equal(event.price, '1', 'price is correct')
-        assert.equal(event.author, author, 'author is correct')   
-        assert.equal(event.ownerOf(), buyer, 'owner is correct')
+        assert.equal(event.tokenId.toNumber(), itemCount.toNumber(), 'Token id is correct')
+        // Check the total price is correct
+        assert.equal(event.price, toWei('0.101'), 'Price is correct')
+        // Check the seller is correct
+        assert.equal(event.seller, author, 'Author is correct')
+        // Check the buyer is correct
+        assert.equal(event.buyer, buyer, 'Owner is correct')
+        // Check the item is sold
+        assert.equal(event.sold, true, 'Item is sold')
       })
     })
   })
