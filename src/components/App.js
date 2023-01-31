@@ -5,9 +5,18 @@ import './App.css';
 import NFTrade from '../abis/NFTrade.json'
 import Navbar from './Navbar'
 import Main from './Main'
+// import * as fs from 'fs';
+import { fs } from 'fs'
+import mime from 'mime-types'
+import { basename } from 'path'
+// import { NFTStorage, File, Blob } from 'nft.storage'
+import { NFTStorage, File } from "nft.storage/dist/bundle.esm.min.js";
+import { PassThrough } from 'stream';
 
-const ipfsClient = require('ipfs-http-client')
-const ipfs = ipfsClient({ host: 'ipfs.infura.io', port: 5001, protocol: 'https' }) // leaving out the arguments will default to these values
+
+// Connecting with nft.storage pinning provider to ipfs
+const NFT_STORAGE_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkaWQ6ZXRocjoweGJCNGRjMDRBMzk3NTI2MUEyNWZDOEViOTZhRUE1ZTRENzUzNTc2YjYiLCJpc3MiOiJuZnQtc3RvcmFnZSIsImlhdCI6MTY3MjI0NzkyMzE2MywibmFtZSI6Ik5GVHJhZGUifQ.EuKJm0iEVAZEteu8Pf_rRbReSuLu0z9h19xoif9f2Z0'
+const client = new NFTStorage({ token: NFT_STORAGE_TOKEN })
 
 class App extends Component {
 
@@ -40,20 +49,20 @@ class App extends Component {
     if(networkData) {
       const nftrade = web3.eth.Contract(NFTrade.abi, networkData.address)
       this.setState({ nftrade })
-      const imagesCount = await nftrade.methods.itemCount().call()
-      this.setState({ imagesCount })
+      const itemCount = await nftrade.methods.itemCount().call()
+      this.setState({ itemCount })
 
       // Load images
-      for (var i = 1; i <= imagesCount; i++) {
-        const image = await nftrade.methods.images(i).call()
+      for (var i = 1; i <= itemCount; i++) {
+        const item = await nftrade.methods.items(i).call()
         this.setState({
-          images: [...this.state.images, image]
+          items: [...this.state.items, item]
         })
       }
 
       this.setState({ loading: false })
     } else {
-      window.alert('NFTrade contract is not deployed to detected network')      
+      window.alert('NFTrade contract is not deployed to detected network.')      
     }
   }
 
@@ -66,15 +75,25 @@ class App extends Component {
     reader.onloadend = () => {
       this.setState({ buffer: Buffer(reader.result) })
       console.log('buffer', this.state.buffer)
+      console.log('file', file)
     }
   }
 
-  uploadImage = description => {
+  uploadImage = (fileData, imageFilename, name, description) => {
     console.log('Submitting file to ipfs...')
 
     // Adding file to the IPFS
-    ipfs.add(this.state.buffer, (error, result) => {
+    const type = mime.lookup(imageFilename)
+    const metadata = client.store({
+      name, 
+      description, 
+      image: new File([ fileData ], basename(imageFilename), { type })
+  }, (error, result) => {
       console.log('Ipfs result', result)
+      console.log('IPFS URL', metadata.url)
+      console.log('metadata.json contents:\n', metadata.data)
+      console.log('metadata.json th IPFS gateway URLs:\n', metadata.embed())
+
       if(error) {
         console.error(error)
         return
@@ -96,13 +115,13 @@ class App extends Component {
   }
 
   // buyItem = (id) => {
-  //   id = this.state.image.id
-  //   const _seller = this.state.image.author
+  //   id = this.state.item.id
+  //   const _seller = this.state.item.seller
   //   const _buyer = this.state.account
   //   this.setState({ loading: true })
   //   this.state.nftrade.methods.safeTransferFrom(_seller, _buyer, id)
   //   this.state.nftrade.methods.approve(_seller, id)
-  //   console.log(this.state.nftrade.methods.ownerOf(images.id))
+  //   console.log(this.state.nftrade.methods.ownerOf(items.id))
       
   //     this.setState({ loading: false })
   // }
@@ -112,7 +131,7 @@ class App extends Component {
     this.state = {
       account: '',
       nftrade: null,
-      images: [],
+      items: [],
       itemsBalance: [],
       loading: true
     }
@@ -126,7 +145,7 @@ class App extends Component {
           ? <div id="loader" className="text-center mt-5"><p>Loading...</p></div>
           : <Main
               buyItem={this.buyItem}
-              images={this.state.images}
+              items={this.state.items}
               captureFile={this.captureFile}
               uploadImage={this.uploadImage}
             />
