@@ -6,16 +6,15 @@ import NFTrade from '../abis/NFTrade.json'
 import Navbar from './Navbar'
 import Main from './Main'
 // import * as fs from 'fs';
-import { fs } from 'fs'
-import mime from 'mime-types'
-import { basename } from 'path'
-// import { NFTStorage, File, Blob } from 'nft.storage'
-import { NFTStorage, File } from "nft.storage/dist/bundle.esm.min.js";
-import { PassThrough } from 'stream';
-
+// import { fs } from 'fs'
+// import mime from 'mime-types'
+import { basename } from 'path-browserify'
+// import { NFTStorage, File } from "nft.storage/dist/bundle.esm.min.js";
+import { NFTStorage, File, Blob } from 'nft.storage'
+// import { PassThrough } from 'stream';
+import { NFT_STORAGE_TOKEN } from './nftStorageAccessToken'
 
 // Connecting with nft.storage pinning provider to ipfs
-const NFT_STORAGE_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkaWQ6ZXRocjoweGJCNGRjMDRBMzk3NTI2MUEyNWZDOEViOTZhRUE1ZTRENzUzNTc2YjYiLCJpc3MiOiJuZnQtc3RvcmFnZSIsImlhdCI6MTY3MjI0NzkyMzE2MywibmFtZSI6Ik5GVHJhZGUifQ.EuKJm0iEVAZEteu8Pf_rRbReSuLu0z9h19xoif9f2Z0'
 const client = new NFTStorage({ token: NFT_STORAGE_TOKEN })
 
 class App extends Component {
@@ -47,7 +46,7 @@ class App extends Component {
     const networkId = await web3.eth.net.getId()
     const networkData = NFTrade.networks[networkId]
     if(networkData) {
-      const nftrade = web3.eth.Contract(NFTrade.abi, networkData.address)
+      const nftrade = new web3.eth.Contract(NFTrade.abi, networkData.address)
       this.setState({ nftrade })
       const itemCount = await nftrade.methods.itemCount().call()
       this.setState({ itemCount })
@@ -73,21 +72,22 @@ class App extends Component {
     reader.readAsArrayBuffer(file)
   
     reader.onloadend = () => {
-      this.setState({ buffer: Buffer(reader.result) })
+      this.setState({ buffer: reader.result })
       console.log('buffer', this.state.buffer)
       console.log('file', file)
     }
   }
 
-  uploadImage = (fileData, imageFilename, name, description) => {
+  listItem = (fileData, imageFilename, name, description) => {
+    console.log('buffer is', fileData)
     console.log('Submitting file to ipfs...')
 
     // Adding file to the IPFS
-    const type = mime.lookup(imageFilename)
+    // const type = mime.lookup(imageFilename)
     const metadata = client.store({
       name, 
       description, 
-      image: new File([ fileData ], basename(imageFilename), { type })
+      image: new File([ fileData ], basename(imageFilename), { type: 'image/*' })
   }, (error, result) => {
       console.log('Ipfs result', result)
       console.log('IPFS URL', metadata.url)
@@ -100,16 +100,16 @@ class App extends Component {
       }
 
       this.setState({ loading: true })
-      this.state.nftrade.methods.uploadImage(result[0].hash, description).send({ from: this.state.account }).on('transactionHash', (hash) => {
+      this.state.nftrade.methods.listItem(result[0].hash, description).send({ from: this.state.account }).on('transactionHash', (hash) => {
         this.setState({ loading: false })
       })
     })
   }
 
-  buyItem = (id) => {
+  purchaseItem = (id) => {
     this.setState({ loading: true })
     console.log(id)
-    this.state.nftrade.methods.buyItem(id).send({ from: this.state.account }).on('transactionHash', (hash) => {
+    this.state.nftrade.methods.purchaseItem(id).send({ from: this.state.account }).on('transactionHash', (hash) => {
       this.setState({ loading: false })
   })
   }
@@ -133,7 +133,8 @@ class App extends Component {
       nftrade: null,
       items: [],
       itemsBalance: [],
-      loading: true
+      loading: true,
+      buffer: null
     }
   }
 
@@ -144,10 +145,10 @@ class App extends Component {
         { this.state.loading
           ? <div id="loader" className="text-center mt-5"><p>Loading...</p></div>
           : <Main
-              buyItem={this.buyItem}
+              purchaseItem={this.buyItem}
               items={this.state.items}
               captureFile={this.captureFile}
-              uploadImage={this.uploadImage}
+              listItem={this.listItem}
             />
           }
       </div>

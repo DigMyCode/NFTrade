@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import Identicon from 'identicon.js';
-import NFTrade from '../abis/NFTrade.json'
+import NFTrade from '../abis/NFTrade.json';
+import App from './App.js'
 
 class Main extends Component {
 
@@ -9,8 +10,7 @@ class Main extends Component {
     const fileInput = document.getElementById('upload');   
     const name = fileInput.files[0].name
     const description = this.description.value
-    console.log(name, description)
-    this.props.uploadImage(fileInput, name, 'NFTname', description)
+    this.props.listItem(this.props.buffer, name, 'NFTname', description)
   }
 
   render() {
@@ -24,7 +24,7 @@ class Main extends Component {
               <h2>Sell image</h2>
       
               <form onSubmit={ (event) => this.onSubmitForm(event) }>
-                <input multiple type='file' id='upload' accept='.jpg, .jpeg, .png, .bmp, .gif' onChange={this.props.captureFile} />
+                <input multiple type='file' id='upload' accept='image/*' onChange={this.props.captureFile} />
                 <div className='form-group mr-sm-2'>
                   <br></br>
                     <input
@@ -66,7 +66,7 @@ class Main extends Component {
                           onClick={(event) => {
                             let price = window.web3.utils.toWei(item.price.toString(), 'Ether')
                             console.log(event.target.name, item.seller, price)
-                            this.props.buyItem(event.target.name)
+                            this.props.purchaseItem(event.target.name)
                           }}
                         >
                           Buy
