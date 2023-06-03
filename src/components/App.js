@@ -12,7 +12,7 @@ import { basename } from 'path-browserify'
 // import { NFTStorage, File } from "nft.storage/dist/bundle.esm.min.js";
 import { NFTStorage, File, Blob } from 'nft.storage'
 // import { PassThrough } from 'stream';
-import { NFT_STORAGE_TOKEN } from './nftStorageAccessToken'
+import { NFT_STORAGE_TOKEN } from '../nftStorageAccessToken'
 
 // Connecting with nft.storage pinning provider to ipfs
 const client = new NFTStorage({ token: NFT_STORAGE_TOKEN })
@@ -93,7 +93,7 @@ class App extends Component {
       console.log('IPFS URL', metadata.url)
       console.log('metadata.json contents:\n', metadata.data)
       console.log('metadata.json th IPFS gateway URLs:\n', metadata.embed())
-
+      
       if(error) {
         console.error(error)
         return
