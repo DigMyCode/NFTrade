@@ -7,7 +7,7 @@ import Navbar from './Navbar'
 import Main from './Main'
 // import * as fs from 'fs';
 // import { fs } from 'fs'
-// import mime from 'mime-types'
+import mime from 'mime'
 import { basename } from 'path-browserify'
 // import { NFTStorage, File } from "nft.storage/dist/bundle.esm.min.js";
 import { NFTStorage, File, Blob } from 'nft.storage'
@@ -71,7 +71,7 @@ class App extends Component {
     const reader = new window.FileReader()
     reader.readAsArrayBuffer(file)
   
-    reader.onloadend = () => {
+    reader.onLoadEnd = () => {
       this.setState({ buffer: reader.result })
       console.log('buffer', this.state.buffer)
       console.log('file', file)
@@ -83,11 +83,12 @@ class App extends Component {
     console.log('Submitting file to ipfs...')
 
     // Adding file to the IPFS
-    // const type = mime.lookup(imageFilename)
+    const type = mime.getType(imageFilename)
+    console.log('type is', type )
     const metadata = client.store({
       name, 
       description, 
-      image: new File([ fileData ], basename(imageFilename), { type: 'image/*' })
+      image: new File([ fileData ], basename(imageFilename), { type: type } )
   }, (error, result) => {
       console.log('Ipfs result', result)
       console.log('IPFS URL', metadata.url)
