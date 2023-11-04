@@ -65,30 +65,29 @@ class App extends Component {
     }
   }
 
-  captureFile = event => {
+  captureFile = async(event) => {
     event.preventDefault()
-    const file = event.target.files[0]
+    const file = await event.target.files[0]
+    console.log('file is', file)
     const reader = new window.FileReader()
     reader.readAsArrayBuffer(file)
   
-    reader.onLoadEnd = () => {
+    reader.onloadend = () => {
       this.setState({ buffer: reader.result })
-      console.log('buffer', this.state.buffer)
       console.log('file', file)
     }
   }
 
-  listItem = (fileData, imageFilename, name, description) => {
-    console.log('buffer is', fileData)
+  listItem = async(buffer, imageFilename, name, description) => {
+    console.log('buffer is', this.state.buffer)
     console.log('Submitting file to ipfs...')
 
-    // Adding file to the IPFS
+    // Adding file to the IPFS through nft.storage API
     const type = mime.getType(imageFilename)
-    console.log('type is', type )
-    const metadata = client.store({
+    const metadata = await client.store({
       name, 
       description, 
-      image: new File([ fileData ], basename(imageFilename), { type: type } )
+      image: new File([ buffer ], basename(imageFilename), { type: type } )
   }, (error, result) => {
       console.log('Ipfs result', result)
       console.log('IPFS URL', metadata.url)
@@ -150,6 +149,7 @@ class App extends Component {
               items={this.state.items}
               captureFile={this.captureFile}
               listItem={this.listItem}
+              buffer={this.state.buffer}
             />
           }
       </div>
